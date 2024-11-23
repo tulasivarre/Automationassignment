@@ -1,0 +1,90 @@
+package Practice;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
+
+public class FitPeoAutomation {
+    public static void main(String[] args) {
+        // Set the path for the ChromeDriver
+        System.setProperty("webdriver.chrome.driver", "/path/chrome.driver.exe");// i am replace my personal path you can your path 
+        
+        WebDriver driver = new ChromeDriver();
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(40));
+        
+        try {
+            // Navigate to the FitPeo Homepage
+            driver.get("https://www.fitpeo.com");
+            driver.manage().window().maximize();
+            
+            // Navigate to the Revenue Calculator Page
+            WebElement revenueCalculatorLink = wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Revenue Calculator")));
+            revenueCalculatorLink.click();
+            
+            // Scroll down to the Slider section
+            WebElement sliderSection = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("slider-section-id"))); 
+            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", sliderSection);
+            
+            // Adjust the Slider to set its value to 820
+            WebElement slider = driver.findElement(By.id("slider-id")); // Replace with actual ID
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            js.executeScript("arguments[0].value = 820; arguments[0].dispatchEvent(new Event('input'));", slider);
+
+            // Validate slider value
+            WebElement sliderValue = driver.findElement(By.id("slider-value-id")); 
+            String value = sliderValue.getAttribute("value");
+            if (value.equals("820")) {
+                System.out.println("Slider successfully updated to 820.");
+            } else {
+                throw new AssertionError("Slider value is not 820. Current value: " + value);
+            }
+
+            // Update the Text Field to 560
+            WebElement textField = driver.findElement(By.id("text-field-id")); 
+            textField.click();
+            textField.clear();
+            textField.sendKeys("560");
+
+            // Trigger the update
+            js.executeScript("arguments[0].dispatchEvent(new Event('change'));", textField);
+
+            // Validate Slider Value after Text Field Update
+            wait.until(ExpectedConditions.attributeToBe(sliderValue, "value", "560"));
+            if (sliderValue.getAttribute("value").equals("560")) {
+                System.out.println("Slider successfully updated to 560.");
+            } else {
+                throw new AssertionError("Slider value is not 560 after text field update. Current value: " + sliderValue.getAttribute("value"));
+            }
+
+            // Select CPT Codes
+            driver.findElement(By.id("cpt-99091-id")).click(); 
+            driver.findElement(By.id("cpt-99453-id")).click(); 
+            driver.findElement(By.id("cpt-99454-id")).click(); 
+            driver.findElement(By.id("cpt-99474-id")).click(); 
+            
+            // Wait and Validate Total Recurring Reimbursement
+            WebElement totalReimbursement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("total-reimbursement-id"))); 
+            String totalValue = totalReimbursement.getText();
+            if (totalValue.equals("$110700")) {
+                System.out.println("Total Recurring Reimbursement validation passed. Value: " + totalValue);
+            } else {
+                throw new AssertionError("Total Recurring Reimbursement is not $110700. Current value: " + totalValue);
+            }
+
+            System.out.println("All validations passed successfully!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Close the browser
+            driver.quit();
+        }
+    }
+}
